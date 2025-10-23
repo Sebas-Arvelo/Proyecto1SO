@@ -56,6 +56,17 @@ public class ColaProcesos {
     }
 
     /**
+     * Observa el primer proceso (cabeza) de la lista sin removerlo.
+     * @return El PCB que está en la cabeza, o null si la cola está vacía.
+     */
+    public PCB peek() {
+        if (estaVacia()) {
+            return null;
+        }
+        return this.cabeza.getProceso();
+    }
+
+    /**
      * Saca el primer proceso (cabeza) de la lista.
      * @return El PCB que estaba en la cabeza, o null si la cola está vacía.
      */
@@ -134,7 +145,9 @@ public class ColaProcesos {
         // Caso 2: Es la cola
         if (actual == this.cola) {
             this.cola = actual.getAnterior();
-            this.cola.setSiguiente(null);
+            if (this.cola != null) {
+                this.cola.setSiguiente(null);
+            }
         } else {
             // Caso 3: Es un nodo intermedio
             NodoPCB anterior = actual.getAnterior();

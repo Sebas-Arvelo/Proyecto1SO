@@ -32,8 +32,22 @@ public class PCB {
     public PCB(String nombre, int totalInstrucciones, String tipo, 
                int ciclosParaSolicitudIO, int ciclosParaCompletarIO) {
         
+        // Validaciones básicas
+        if (nombre == null || nombre.trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del proceso no puede ser nulo o vacío");
+        }
+        if (totalInstrucciones <= 0) {
+            throw new IllegalArgumentException("El total de instrucciones debe ser mayor que 0");
+        }
+        if (!("CPU_BOUND".equals(tipo) || "IO_BOUND".equals(tipo))) {
+            throw new IllegalArgumentException("El tipo debe ser 'CPU_BOUND' o 'IO_BOUND'");
+        }
+        if (ciclosParaSolicitudIO < 0 || ciclosParaCompletarIO < 0) {
+            throw new IllegalArgumentException("Los ciclos de E/S no pueden ser negativos");
+        }
+        
         this.id = ++contadorId; // Asigna un ID único incremental
-        this.nombre = nombre;
+        this.nombre = nombre.trim();
         this.totalInstrucciones = totalInstrucciones;
         this.tipo = tipo;
         this.ciclosParaSolicitudIO = ciclosParaSolicitudIO;
@@ -100,7 +114,13 @@ public class PCB {
     public EstadoProceso getEstado() { return estado; }
     public void setEstado(EstadoProceso estado) { this.estado = estado; }
     public int getProgramCounter() { return programCounter; }
+    public void setProgramCounter(int programCounter) { this.programCounter = programCounter; }
     public int getMemoryAddressRegister() { return memoryAddressRegister; }
+    public void setMemoryAddressRegister(int memoryAddressRegister) { this.memoryAddressRegister = memoryAddressRegister; }
     public int getTotalInstrucciones() { return totalInstrucciones; }
+    public String getTipo() { return tipo; }
+    public int getCiclosParaSolicitudIO() { return ciclosParaSolicitudIO; }
     public int getCiclosParaCompletarIO() { return ciclosParaCompletarIO; }
+    public int getContadorCiclosIO() { return contadorCiclosIO; }
+    public void setContadorCiclosIO(int contadorCiclosIO) { this.contadorCiclosIO = contadorCiclosIO; }
 }
