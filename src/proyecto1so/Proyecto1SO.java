@@ -4,6 +4,8 @@
  */
 package proyecto1so;
 
+import javax.swing.SwingUtilities;
+
 /**
  *
  * @author Sebastian
@@ -14,57 +16,50 @@ public class Proyecto1SO {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // Ejemplo básico de uso del sistema de procesos
-        System.out.println("=== Sistema de Gestión de Procesos ===");
-        
-        // Crear algunos procesos de ejemplo
-        PCB proceso1 = new PCB("Navegador", 100, "IO_BOUND", 10, 5);
-        PCB proceso2 = new PCB("Calculadora", 50, "CPU_BOUND", 0, 0);
-        PCB proceso3 = new PCB("Editor", 75, "IO_BOUND", 15, 8);
-        
-        // Crear una cola de procesos
-        ColaProcesos colaListos = new ColaProcesos();
-        
-        // Encolar los procesos
-        colaListos.encolar(proceso1);
-        colaListos.encolar(proceso2);
-        colaListos.encolar(proceso3);
-        
-        System.out.println("Procesos en cola: " + colaListos.getTamano());
-        
-        // Mostrar todos los procesos
-        PCB[] procesos = colaListos.toArray();
-        for (PCB p : procesos) {
-            System.out.println(p.toString());
+        // Cargar configuración
+        ConfigManager cfg = new ConfigManager();
+        cfg.load();
+
+        // Política inicial desde config (normalizada)
+        Scheduler sched;
+        String polRaw = cfg.getPolicy();
+        String pol = (polRaw == null ? "FCFS" : polRaw.trim().toUpperCase());
+        int quantum = Math.max(1, cfg.getQuantum()); // asegura quantum válido
+        int cycleMillis = Math.max(1, cfg.getCycleMillis()); // asegura ciclo válido
+
+        switch (pol) {
+            case "RR":
+                sched = new RRScheduler(quantum);
+                break;
+            case "SJF":
+                sched = new SJFScheduler();
+                break;
+            case "SRTF":
+                sched = new SRTFScheduler();
+                break;
+            case "P-NP":
+                sched = new PriorityNPScheduler();
+                break;
+            case "P-P":
+                sched = new PriorityPScheduler();
+                break;
+            default:
+                sched = new FCFSScheduler();
+                break;
         }
-        
-        // Simular ejecución básica
-        System.out.println("\n=== Simulación de Ejecución ===");
-        while (!colaListos.estaVacia()) {
-            PCB procesoActual = colaListos.desencolar();
-            procesoActual.setEstado(EstadoProceso.EJECUCION);
-            System.out.println("Ejecutando: " + procesoActual.toString());
-            
-            // Simular algunos ciclos de CPU
-            for (int i = 0; i < 5 && !procesoActual.haTerminado(); i++) {
-                procesoActual.ejecutarCiclo();
-                if (procesoActual.debeSolicitarIO()) {
-                    procesoActual.setEstado(EstadoProceso.BLOQUEADO);
-                    System.out.println("  -> Proceso bloqueado por E/S");
-                    break;
-                }
-            }
-            
-            if (procesoActual.haTerminado()) {
-                procesoActual.setEstado(EstadoProceso.TERMINADO);
-                System.out.println("  -> Proceso terminado");
-            } else if (procesoActual.getEstado() != EstadoProceso.BLOQUEADO) {
-                procesoActual.setEstado(EstadoProceso.LISTO);
-                System.out.println("  -> Proceso devuelto a cola de listos");
-            }
-        }
-        
-        System.out.println("\nSimulación completada.");
+
+        Kernel kernel = new Kernel(cycleMillis, sched);
+
+        // (Sin semillas automáticas) — use el botón "Semillas Demo" en la UI para crearlas cuando desee
+
+        // Adjuntar GUI Swing en el hilo de despacho de eventos
+        SwingUtilities.invokeLater(() -> {
+            SwingSimulatorUI ui = new SwingSimulatorUI(kernel);
+            kernel.attachUI(ui);
+        });
+
+        // Guardar config al cerrar (opcional)
+        Runtime.getRuntime().addShutdownHook(new Thread(cfg::save));
     }
     
 }
